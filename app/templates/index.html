@@ -1,0 +1,953 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Face - ค้นหาใบหน้าที่ตรงกัน</title>
+    <link rel="icon" type="image/jpeg" href="/static/favicon.jpg">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --fw-blue: #0066cc;
+            --fw-blue-hover: #0056b3;
+            --fw-bg: #ffffff;
+            --fw-bg-alt: #f8f9fa;
+            --fw-text-main: #212529;
+            --fw-text-muted: #6c757d;
+            --fw-border: #e9ecef;
+            --fw-border-hover: #ced4da;
+            --fw-radius: 8px;
+            --fw-radius-lg: 12px;
+            --fw-shadow-sm: 0 1px 3px rgba(0,0,0,0.05);
+            --fw-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            --fw-shadow-hover: 0 10px 15px -3px rgba(0,0,0,0.1);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Prompt', 'Outfit', sans-serif;
+            background-color: var(--fw-bg);
+            color: var(--fw-text-main);
+            line-height: 1.6;
+        }
+
+        /* Navbar */
+        .navbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 40px;
+            background: var(--fw-bg);
+            border-bottom: 1px solid var(--fw-border);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .nav-left {
+            display: flex;
+            align-items: center;
+            gap: 32px;
+        }
+
+        .brand-logo {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-family: 'Outfit', sans-serif;
+            font-size: 24px;
+            font-weight: 800;
+            color: var(--fw-blue);
+            text-decoration: none;
+            letter-spacing: -0.5px;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 24px;
+        }
+
+        .nav-link {
+            text-decoration: none;
+            color: var(--fw-text-main);
+            font-weight: 500;
+            font-size: 15px;
+            transition: color 0.2s;
+        }
+
+        .nav-link:hover, .nav-link.active {
+            color: var(--fw-blue);
+        }
+
+        .nav-link.active {
+            border-bottom: 2px solid var(--fw-blue);
+            padding-bottom: 4px;
+        }
+
+        .nav-right {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .btn-outline {
+            padding: 8px 16px;
+            border: 1px solid var(--fw-border-hover);
+            background: transparent;
+            border-radius: var(--fw-radius);
+            font-weight: 600;
+            color: var(--fw-text-main);
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        
+        .btn-outline:hover {
+            border-color: var(--fw-blue);
+            color: var(--fw-blue);
+        }
+
+        .btn-primary {
+            padding: 10px 24px;
+            background: var(--fw-blue);
+            border: none;
+            border-radius: var(--fw-radius);
+            font-weight: 600;
+            font-size: 15px;
+            color: #fff;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .btn-primary:hover {
+            background: var(--fw-blue-hover);
+        }
+
+        /* Container */
+        .container {
+            max-width: 1140px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        /* Hero Section */
+        .hero {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .hero h1 {
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 12px;
+            color: var(--fw-text-main);
+        }
+
+        .hero p {
+            font-size: 16px;
+            color: var(--fw-text-muted);
+            margin-bottom: 32px;
+        }
+
+        /* Dropzone */
+        .dropzone-container {
+            max-width: 600px;
+            margin: 0 auto 32px auto;
+        }
+
+        .dropzone {
+            border: 2px dashed var(--fw-border-hover);
+            background: var(--fw-bg-alt);
+            border-radius: var(--fw-radius-lg);
+            padding: 40px 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .dropzone:hover, .dropzone.dragover {
+            border-color: var(--fw-blue);
+            background: #f0f7ff;
+        }
+
+        .dropzone svg {
+            color: var(--fw-text-muted);
+            margin-bottom: 16px;
+        }
+        
+        .dropzone:hover svg {
+            color: var(--fw-blue);
+        }
+
+        .preview-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+            gap: 12px;
+            margin-top: 16px;
+        }
+
+        .preview-item {
+            position: relative;
+            border-radius: var(--fw-radius);
+            overflow: hidden;
+            aspect-ratio: 1;
+            border: 1px solid var(--fw-border);
+        }
+
+        .preview-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .preview-remove {
+            position: absolute;
+            top: 4px;
+            right: 4px;
+            background: rgba(255, 255, 255, 0.9);
+            color: #dc3545;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        /* Search Settings */
+        .settings-panel {
+            max-width: 800px;
+            margin: 0 auto;
+            background: var(--fw-bg);
+            border: 1px solid var(--fw-border);
+            border-radius: var(--fw-radius-lg);
+            padding: 24px;
+            box-shadow: var(--fw-shadow-sm);
+            margin-bottom: 40px;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        .input-label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        .text-input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid var(--fw-border-hover);
+            border-radius: var(--fw-radius);
+            font-size: 14px;
+            font-family: inherit;
+            transition: 0.2s;
+            background: var(--fw-bg);
+        }
+
+        .text-input:focus {
+            outline: none;
+            border-color: var(--fw-blue);
+            box-shadow: 0 0 0 3px rgba(0, 102, 204, 0.1);
+        }
+
+        .source-toggle {
+            display: flex;
+            gap: 12px;
+        }
+
+        .source-lbl {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 12px;
+            border: 1px solid var(--fw-border-hover);
+            border-radius: var(--fw-radius);
+            cursor: pointer;
+            font-weight: 500;
+            font-size: 14px;
+            color: var(--fw-text-muted);
+            transition: 0.2s;
+        }
+
+        .source-lbl.active {
+            border-color: var(--fw-blue);
+            background: #f0f7ff;
+            color: var(--fw-blue);
+            font-weight: 600;
+        }
+
+        /* Results Area */
+        .results-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid var(--fw-border);
+        }
+        
+        .results-header h2 {
+            font-size: 20px;
+            font-weight: 600;
+        }
+
+        .matches-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+        }
+
+        /* Match Card - Fastwork Style */
+        .match-card {
+            background: var(--fw-bg);
+            border: 1px solid var(--fw-border);
+            border-radius: var(--fw-radius-lg);
+            overflow: hidden;
+            transition: 0.2s;
+            box-shadow: var(--fw-shadow-sm);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .match-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--fw-shadow-hover);
+            border-color: var(--fw-border-hover);
+        }
+
+        .card-img-wrap {
+            position: relative;
+            width: 100%;
+            height: 180px;
+            background: var(--fw-bg-alt);
+            overflow: hidden;
+            cursor: pointer;
+        }
+
+        .card-img-wrap img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .card-badge {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 700;
+            color: #fff;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .card-body {
+            padding: 16px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .card-title {
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--fw-text-main);
+            margin-bottom: 8px;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            text-decoration: none;
+            line-height: 1.4;
+        }
+        
+        .card-title:hover {
+            color: var(--fw-blue);
+        }
+
+        .card-meta {
+            font-size: 13px;
+            color: var(--fw-text-muted);
+            margin-bottom: 16px;
+            flex: 1;
+        }
+
+        .card-btn {
+            width: 100%;
+            padding: 10px;
+            background: var(--fw-bg);
+            border: 1px solid var(--fw-blue);
+            color: var(--fw-blue);
+            border-radius: var(--fw-radius);
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .card-btn:hover {
+            background: var(--fw-blue);
+            color: #fff;
+        }
+
+        /* Face Picker */
+        .face-picker-grid {
+            display: flex;
+            gap: 12px;
+            overflow-x: auto;
+            margin-bottom: 16px;
+        }
+
+        .face-chip {
+            border: 1px solid var(--fw-border);
+            border-radius: var(--fw-radius);
+            padding: 8px;
+            cursor: pointer;
+            text-align: center;
+            min-width: 80px;
+            transition: 0.2s;
+        }
+
+        .face-chip.active {
+            border-color: var(--fw-blue);
+            background: #f0f7ff;
+            box-shadow: 0 0 0 1px var(--fw-blue);
+        }
+
+        .face-chip img {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin-bottom: 6px;
+        }
+
+        /* Progress & State */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--fw-text-muted);
+            background: var(--fw-bg-alt);
+            border-radius: var(--fw-radius-lg);
+            border: 1px dashed var(--fw-border-hover);
+        }
+
+        .progress-bar-container {
+            height: 6px;
+            background: var(--fw-border);
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 12px 0;
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            width: 0%;
+            background: var(--fw-blue);
+            border-radius: 10px;
+            transition: width 0.3s ease;
+        }
+
+        .stats-row {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+        }
+
+        .stat-badge {
+            background: var(--fw-bg-alt);
+            border: 1px solid var(--fw-border);
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        /* Lightbox (Reused from old, but cleaned up) */
+        .lightbox-modal {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            display: none; align-items: center; justify-content: center;
+            z-index: 9999; padding: 20px;
+        }
+        .lightbox-content { max-width: 900px; max-height: 90vh; display: flex; flex-direction: column; align-items: center; gap: 16px; position: relative; }
+        .lightbox-img { max-width: 100%; max-height: 75vh; border-radius: var(--fw-radius); box-shadow: 0 8px 40px rgba(0,0,0,0.3); }
+        .lightbox-close { position: absolute; top: -40px; right: 0; color: #fff; font-size: 28px; cursor: pointer; }
+        .target-reticle { position: absolute; border: 3px solid #00ff00; border-radius: 4px; box-shadow: 0 0 0 1px rgba(0,0,0,0.5); pointer-events: none; }
+    </style>
+</head>
+<body>
+
+    <!-- Navbar -->
+    <nav class="navbar">
+        <div class="nav-left">
+            <a href="#" class="brand-logo">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 3a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M21 8a2 2 0 0 0-2-2h-6a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2V8z"/><path d="m14.5 12.5 2-2 2 2"/></svg>
+                Face
+            </a>
+            <div class="nav-links">
+                <a href="#" class="nav-link active">ค้นหาใบหน้า (Find Matches)</a>
+                <a href="#" class="nav-link">ประวัติการค้นหา</a>
+                <a href="#" class="nav-link">ตั้งค่าฐานข้อมูล</a>
+            </div>
+        </div>
+        <div class="nav-right">
+            <button class="btn-outline">ติดต่อเรา</button>
+            <button class="btn-primary">เข้าสู่ระบบ</button>
+        </div>
+    </nav>
+
+    <div class="container">
+        
+        <!-- Hero Section -->
+        <div class="hero">
+            <h1>ค้นหาใบหน้าที่ตรงกันในพริบตา</h1>
+            <p>อัปโหลดรูปภาพเพื่อค้นหาใบหน้าที่คล้ายคลึงกันจากฐานข้อมูล หรือเว็บไซต์เป้าหมาย</p>
+        </div>
+
+        <!-- Main Workspace -->
+        <div class="dropzone-container">
+            <div class="dropzone" id="scanner-dropzone" onclick="document.getElementById('scanner-file-input').click()">
+                <input type="file" id="scanner-file-input" accept="image/*" multiple style="display: none;" onchange="handleTargetFiles(this.files)">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                    <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                    <polyline points="21 15 16 10 5 21"></polyline>
+                </svg>
+                <div style="font-size: 16px; font-weight: 600; color: var(--fw-text-main); margin-bottom: 8px;">ลากไฟล์มาวาง หรือ คลิกเพื่ออัปโหลด</div>
+                <div style="font-size: 13px; color: var(--fw-text-muted);">(รองรับ JPEG/PNG, เลือกได้หลายภาพ)</div>
+            </div>
+            <div class="preview-grid" id="scanner-preview-grid" style="display: none;"></div>
+
+            <!-- Face Picker -->
+            <div id="target-faces-selector" style="display: none; margin-top: 16px;">
+                <div style="font-weight: 600; margin-bottom: 12px; font-size: 14px;" id="target-picker-title">วิเคราะห์ใบหน้า:</div>
+                <div class="face-picker-grid" id="target-faces-chips"></div>
+            </div>
+        </div>
+
+        <div class="settings-panel">
+            <div class="input-group">
+                <label class="input-label">แหล่งข้อมูลการค้นหา (Source)</label>
+                <div class="source-toggle">
+                    <label id="lbl-src-local" class="source-lbl active">
+                        <input type="radio" name="source_type" value="local" checked onchange="toggleSourceType('local')" style="display: none;">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="5" rx="9" ry="3"></ellipse><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"></path><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"></path></svg>
+                        ฐานข้อมูล Local
+                    </label>
+                    <label id="lbl-src-web" class="source-lbl">
+                        <input type="radio" name="source_type" value="web" onchange="toggleSourceType('web')" style="display: none;">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
+                        สแกนจากเว็บไซต์ (Live)
+                    </label>
+                </div>
+            </div>
+
+            <div id="web-source-inputs" style="display: none;">
+                <div class="input-group">
+                    <label class="input-label">URL เว็บไซต์เป้าหมาย</label>
+                    <input type="url" id="scanner-webpage-url" class="text-input" placeholder="https://www.example.com" value="https://www.dusit.ac.th/home/?s=วิชชา+ฉิมพลี">
+                </div>
+                <div class="input-group">
+                    <label class="input-label">ระดับความลึก (Max Pages)</label>
+                    <select id="scanner-max-pages" class="text-input">
+                        <option value="30">ระดับ 1 (30 หน้า)</option>
+                        <option value="100">ระดับ 2 (100 หน้า)</option>
+                        <option value="200" selected>ระดับ 3 (200 หน้า)</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="input-group" style="margin-bottom: 24px;">
+                <label class="input-label">ความแม่นยำ (Threshold: <span id="thresh-val" style="color: var(--fw-blue);">0.50</span>)</label>
+                <input type="range" id="scanner-threshold" min="0.20" max="0.75" step="0.01" value="0.50" style="width: 100%; cursor: pointer;" oninput="document.getElementById('thresh-val').innerText = parseFloat(this.value).toFixed(2)">
+            </div>
+
+            <div style="text-align: center;">
+                <button class="btn-primary" id="btn-scan" onclick="startFacialScan()" style="width: 100%; max-width: 300px; height: 48px; font-size: 16px;">
+                    <span id="btn-text">ระบุตัวตน (Identify Face)</span>
+                </button>
+                <button class="btn-outline" id="btn-stop-scan" onclick="stopFacialScan()" style="display: none; width: 100%; max-width: 300px; height: 48px; margin-top: 12px; color: #dc3545; border-color: #dc3545;">
+                    ยกเลิกการค้นหา
+                </button>
+            </div>
+        </div>
+
+        <!-- Results Area -->
+        <div id="progress-banner" style="margin-bottom: 32px;">
+            <div style="display: flex; justify-content: space-between; font-size: 14px; font-weight: 500;">
+                <span id="status-text">สถานะ: พร้อมใช้งาน</span>
+                <span id="status-percent" style="font-weight: bold; color: var(--fw-blue);">0%</span>
+            </div>
+            <div class="progress-bar-container">
+                <div class="progress-bar-fill" id="progress-bar"></div>
+            </div>
+            <div class="stats-row">
+                <div class="stat-badge">ใบหน้าที่ตรวจสอบ: <span id="stat-faces">0</span></div>
+                <div class="stat-badge">รูปภาพ: <span id="stat-images">0</span></div>
+                <div class="stat-badge" style="color: var(--fw-blue); border-color: var(--fw-blue);">พบเป้าหมาย: <span id="stat-matches">0</span></div>
+            </div>
+        </div>
+
+        <div class="results-header">
+            <h2>ผลลัพธ์การค้นหา (Matching Results)</h2>
+            <div style="font-size: 14px; color: var(--fw-text-muted);">
+                ใช้เวลา: <span id="scan-timer" style="font-weight: 600; color: var(--fw-text-main);">0.0s</span>
+            </div>
+        </div>
+
+        <div class="matches-grid" id="matches-feed">
+            <div class="empty-state" style="grid-column: 1 / -1;">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom: 16px;"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                <h3 style="margin-bottom: 8px; color: var(--fw-text-main);">ยังไม่มีข้อมูล</h3>
+                <p>อัปโหลดรูปภาพเป้าหมายและกดค้นหาเพื่อดูผลลัพธ์ที่นี่</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Lightbox Modal -->
+    <div class="lightbox-modal" id="lightbox-modal" onclick="if(event.target===this) closeLightbox()">
+        <div class="lightbox-content">
+            <span class="lightbox-close" onclick="closeLightbox()">✕</span>
+            <div style="position: relative; display: inline-block;">
+                <img id="lightbox-img" class="lightbox-img" src="">
+                <div id="lightbox-reticle" class="target-reticle" style="display: none;"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // JS Logic porting
+        let targetFiles = [];
+        let detectedTargetFaces = [];
+        let selectedTargetFaceIndex = null;
+        let detectFacesAbortController = null;
+        let scanAbortController = null;
+        let isScanAborted = false;
+        let scanTimerInterval = null;
+
+        async function handleTargetFiles(files) {
+            if (!files || files.length === 0) return;
+            for (let i = 0; i < files.length; i++) {
+                targetFiles.push(files[i]);
+            }
+            renderTargetPreviews();
+            document.getElementById('scanner-file-input').value = '';
+            await detectTargetFaces();
+        }
+
+        function renderTargetPreviews() {
+            const grid = document.getElementById('scanner-preview-grid');
+            grid.innerHTML = '';
+            if (targetFiles.length === 0) {
+                grid.style.display = 'none';
+                return;
+            }
+            grid.style.display = 'grid';
+            targetFiles.forEach((file, idx) => {
+                const div = document.createElement('div');
+                div.className = 'preview-item';
+                const url = URL.createObjectURL(file);
+                div.innerHTML = `
+                    <img src="${url}">
+                    <span class="preview-remove" onclick="removeTargetPhoto(${idx})">✕</span>
+                `;
+                grid.appendChild(div);
+            });
+        }
+
+        function removeTargetPhoto(idx) {
+            targetFiles.splice(idx, 1);
+            renderTargetPreviews();
+            detectTargetFaces();
+        }
+
+        async function detectTargetFaces() {
+            const picker = document.getElementById('target-faces-selector');
+            const chips = document.getElementById('target-faces-chips');
+            const titleLabel = document.getElementById('target-picker-title');
+
+            if (detectFacesAbortController) {
+                detectFacesAbortController.abort();
+            }
+
+            if (targetFiles.length === 0) {
+                picker.style.display = 'none';
+                detectedTargetFaces = [];
+                selectedTargetFaceIndex = null;
+                return;
+            }
+
+            picker.style.display = 'block';
+            titleLabel.innerText = 'กำลังวิเคราะห์ใบหน้า...';
+            chips.innerHTML = '<div style="font-size: 13px; color: var(--fw-text-muted);">รอสักครู่...</div>';
+
+            const formData = new FormData();
+            targetFiles.forEach(f => formData.append('files', f));
+
+            const controller = new AbortController();
+            detectFacesAbortController = controller;
+
+            try {
+                const resp = await fetch('/api/v1/target/detect-faces', {
+                    method: 'POST', body: formData, signal: controller.signal
+                });
+                if (!resp.ok) throw new Error('Detect failed');
+                const data = await resp.json();
+                detectedTargetFaces = data.faces || [];
+
+                if (detectedTargetFaces.length === 0) {
+                    titleLabel.innerText = 'ไม่พบใบหน้า กรุณาลองรูปอื่น';
+                    chips.innerHTML = '';
+                    selectedTargetFaceIndex = null;
+                    return;
+                }
+
+                if (detectedTargetFaces.length === 1) {
+                    titleLabel.innerText = 'วิเคราะห์ใบหน้าสำเร็จ';
+                    selectedTargetFaceIndex = 0;
+                } else {
+                    titleLabel.innerText = 'พบหลายใบหน้า กรุณาเลือกเป้าหมาย:';
+                    selectedTargetFaceIndex = 0;
+                }
+
+                chips.innerHTML = '';
+                detectedTargetFaces.forEach((f, idx) => {
+                    const chip = document.createElement('div');
+                    chip.className = `face-chip ${idx === selectedTargetFaceIndex ? 'active' : ''}`;
+                    chip.onclick = () => {
+                        selectedTargetFaceIndex = idx;
+                        document.querySelectorAll('.face-chip').forEach((c, i) => c.classList.toggle('active', i === idx));
+                    };
+                    chip.innerHTML = `
+                        <img src="${f.thumbnail_b64}">
+                        <div style="font-size: 11px; font-weight: 600;">เป้าหมาย ${idx+1}</div>
+                    `;
+                    chips.appendChild(chip);
+                });
+            } catch (err) {
+                if (detectFacesAbortController !== controller) return;
+                titleLabel.innerText = 'เกิดข้อผิดพลาดในการวิเคราะห์';
+                chips.innerHTML = '';
+            }
+        }
+
+        function toggleSourceType(type) {
+            const isLocal = type === 'local';
+            document.getElementById('web-source-inputs').style.display = isLocal ? 'none' : 'block';
+            
+            const lblLocal = document.getElementById('lbl-src-local');
+            const lblWeb = document.getElementById('lbl-src-web');
+
+            if (isLocal) {
+                lblLocal.classList.add('active');
+                lblWeb.classList.remove('active');
+            } else {
+                lblWeb.classList.add('active');
+                lblLocal.classList.remove('active');
+            }
+        }
+
+        function stopFacialScan() {
+            if (scanAbortController) {
+                isScanAborted = true;
+                scanAbortController.abort();
+                scanAbortController = null;
+            }
+            if (scanTimerInterval) {
+                clearInterval(scanTimerInterval);
+                scanTimerInterval = null;
+            }
+            document.getElementById('btn-scan').style.display = 'inline-block';
+            document.getElementById('btn-stop-scan').style.display = 'none';
+            document.getElementById('status-text').innerText = 'ยกเลิกการค้นหาแล้ว';
+            document.getElementById('progress-bar').style.background = '#dc3545';
+        }
+
+        function openTargetLightbox(imgUrl, bboxPct) {
+            const modal = document.getElementById('lightbox-modal');
+            const img = document.getElementById('lightbox-img');
+            const reticle = document.getElementById('lightbox-reticle');
+            
+            img.src = imgUrl;
+            modal.style.display = 'flex';
+
+            if (bboxPct && bboxPct.length === 4) {
+                const x1 = Math.max(0, bboxPct[0]);
+                const y1 = Math.max(0, bboxPct[1]);
+                const x2 = Math.min(1, bboxPct[2]);
+                const y2 = Math.min(1, bboxPct[3]);
+
+                reticle.style.left = (x1 * 100) + '%';
+                reticle.style.top = (y1 * 100) + '%';
+                reticle.style.width = ((x2 - x1) * 100) + '%';
+                reticle.style.height = ((y2 - y1) * 100) + '%';
+                reticle.style.display = 'block';
+            } else {
+                reticle.style.display = 'none';
+            }
+        }
+
+        function closeLightbox() {
+            document.getElementById('lightbox-modal').style.display = 'none';
+        }
+
+        async function startFacialScan() {
+            if (targetFiles.length === 0) {
+                alert('กรุณาอัปโหลดรูปภาพเป้าหมายก่อน');
+                return;
+            }
+
+            const isLocal = document.querySelector('input[name="source_type"]:checked').value === 'local';
+            const webpageUrl = isLocal ? 'local' : document.getElementById('scanner-webpage-url').value.trim();
+            
+            const btn = document.getElementById('btn-scan');
+            const btnStop = document.getElementById('btn-stop-scan');
+            const statusText = document.getElementById('status-text');
+            const statusPercent = document.getElementById('status-percent');
+            const progressBar = document.getElementById('progress-bar');
+            const matchesFeed = document.getElementById('matches-feed');
+
+            isScanAborted = false;
+            scanAbortController = new AbortController();
+            btn.style.display = 'none';
+            btnStop.style.display = 'inline-block';
+            
+            statusText.innerText = 'กำลังเตรียมการค้นหา...';
+            statusPercent.innerText = '0%';
+            progressBar.style.width = '5%';
+            progressBar.style.background = 'var(--fw-blue)';
+            matchesFeed.innerHTML = '';
+            
+            document.getElementById('stat-faces').innerText = '0';
+            document.getElementById('stat-images').innerText = '0';
+            document.getElementById('stat-matches').innerText = '0';
+
+            let matchesFoundCount = 0;
+
+            if (scanTimerInterval) clearInterval(scanTimerInterval);
+            const startTime = Date.now();
+            scanTimerInterval = setInterval(() => {
+                document.getElementById('scan-timer').innerText = ((Date.now() - startTime) / 1000).toFixed(1) + 's';
+            }, 100);
+
+            const threshold = document.getElementById('scanner-threshold').value;
+            const maxPages = document.getElementById('scanner-max-pages').value;
+            const formData = new FormData();
+            targetFiles.forEach(file => formData.append('files', file));
+
+            try {
+                const faceParam = selectedTargetFaceIndex !== null ? `&selected_face_index=${selectedTargetFaceIndex}` : '';
+                const response = await fetch(`/api/v1/scan-stream?webpage_url=${encodeURIComponent(webpageUrl)}&score_threshold=${threshold}&max_pages=${maxPages}${faceParam}`, {
+                    method: 'POST', body: formData, signal: scanAbortController.signal
+                });
+
+                if (!response.ok) throw new Error('การเชื่อมต่อล้มเหลว');
+
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder('utf-8');
+                let buffer = '';
+
+                while (true) {
+                    if (isScanAborted) break;
+                    const { done, value } = await reader.read();
+                    if (done) break;
+
+                    buffer += decoder.decode(value, { stream: true });
+                    const lines = buffer.split('\n\n');
+                    buffer = lines.pop();
+
+                    for (const line of lines) {
+                        const trimmed = line.trim();
+                        if (trimmed.startsWith('data: ')) {
+                            try {
+                                const evt = JSON.parse(trimmed.substring(6));
+                                if (evt.type === 'status') {
+                                    statusText.innerText = evt.message;
+                                } else if (evt.type === 'scan_progress' || evt.type === 'progress') {
+                                    document.getElementById('stat-images').innerText = `${evt.scanned} / ${evt.total}`;
+                                    document.getElementById('stat-matches').innerText = evt.matches_count;
+                                    if (evt.faces_found) document.getElementById('stat-faces').innerText = evt.faces_found;
+                                    const pct = evt.total > 0 ? Math.min(100, Math.round((evt.scanned / evt.total) * 100)) : 0;
+                                    statusPercent.innerText = `${pct}%`;
+                                    progressBar.style.width = `${pct}%`;
+                                    statusText.innerText = `กำลังสแกน... [${evt.scanned}/${evt.total}]`;
+                                } else if (evt.type === 'match_found') {
+                                    matchesFoundCount++;
+                                    document.getElementById('stat-matches').innerText = matchesFoundCount;
+                                    
+                                    const m = evt.match;
+                                    const matchPct = (m.score * 100).toFixed(1);
+                                    let scoreColor = '#28a745';
+                                    if (m.score < 0.50) scoreColor = '#ffc107';
+                                    if (m.score < 0.40) scoreColor = '#dc3545';
+
+                                    const safeTitle = (m.page_title || 'พบใบหน้าเป้าหมาย').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+                                    const bboxParam = m.bbox_pct ? JSON.stringify(m.bbox_pct) : 'null';
+
+                                    const card = document.createElement('div');
+                                    card.className = 'match-card';
+                                    card.innerHTML = `
+                                        <div class="card-img-wrap" onclick='openTargetLightbox("${m.image_url}", ${bboxParam})'>
+                                            <img src="${m.image_url}" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=\\'http://www.w3.org/2000/svg\\' width=\\'100\\' height=\\'100\\'><rect width=\\'100\\' height=\\'100\\' fill=\\'%23f8f9fa\\'/></svg>'">
+                                            <div class="card-badge" style="background: ${scoreColor}">${matchPct}% Match</div>
+                                        </div>
+                                        <div class="card-body">
+                                            <a href="${m.page_url || webpageUrl}" target="_blank" class="card-title">${safeTitle}</a>
+                                            <p class="card-meta">ตรวจสอบเมื่อ: ${new Date().toLocaleTimeString()}</p>
+                                            <button class="card-btn" onclick="window.open('${m.page_url || webpageUrl}', '_blank')">ดูรายละเอียดแหล่งที่มา</button>
+                                        </div>
+                                    `;
+                                    matchesFeed.prepend(card);
+                                } else if (evt.type === 'complete') {
+                                    if (scanTimerInterval) clearInterval(scanTimerInterval);
+                                    progressBar.style.width = '100%';
+                                    progressBar.style.background = '#28a745';
+                                    statusPercent.innerText = '100%';
+                                    statusText.innerText = `เสร็จสิ้น: พบเป้าหมาย ${evt.matched_count} รายการ (ใช้เวลา ${evt.duration}s)`;
+                                    
+                                    if (matchesFoundCount === 0) {
+                                        matchesFeed.innerHTML = `
+                                            <div class="empty-state" style="grid-column: 1 / -1;">
+                                                <h3 style="color: var(--fw-text-main);">ไม่พบใบหน้าที่ตรงกัน</h3>
+                                                <p>ลองปรับลดค่าความแม่นยำ (Threshold) หรือเพิ่มรูปภาพเป้าหมายในมุมมองอื่นๆ</p>
+                                            </div>
+                                        `;
+                                    }
+                                }
+                            } catch (e) {}
+                        }
+                    }
+                }
+            } catch (err) {
+                if (err.name !== 'AbortError' && !isScanAborted) {
+                    statusText.innerText = `ข้อผิดพลาด: ${err.message}`;
+                    progressBar.style.background = '#dc3545';
+                }
+            } finally {
+                if (scanTimerInterval) clearInterval(scanTimerInterval);
+                btn.style.display = 'inline-block';
+                btnStop.style.display = 'none';
+            }
+        }
+    </script>
+</body>
+</html>
