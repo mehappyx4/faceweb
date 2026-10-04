@@ -1,6 +1,6 @@
-# 🎯 ReconFace: ระบบค้นหาใบหน้าแบบย้อนกลับและระบบรู้จำใบหน้า
+# 🎯 Face: ระบบค้นหาใบหน้าแบบย้อนกลับและระบบรู้จำใบหน้า
 
-ReconFace คือระบบ OSINT แบบครบวงจรและกระจายการทำงาน สำหรับรับรูปภาพจากแหล่งข้อมูลบนเว็บ สกัดเวกเตอร์ใบหน้าขนาด 512 มิติที่ผ่านการทำให้เป็นมาตรฐานด้วย **InsightFace ArcFace** จัดทำดัชนีเวกเตอร์ลงใน **Qdrant Vector DB** โดยใช้ดัชนี HNSW และระยะห่างแบบ Cosine พร้อมให้บริการ REST API ที่รวดเร็วสำหรับการค้นหาใบหน้าแบบย้อนกลับ
+Face คือระบบ OSINT แบบครบวงจรและกระจายการทำงาน สำหรับรับรูปภาพจากแหล่งข้อมูลบนเว็บ สกัดเวกเตอร์ใบหน้าขนาด 512 มิติที่ผ่านการทำให้เป็นมาตรฐานด้วย **InsightFace ArcFace** จัดทำดัชนีเวกเตอร์ลงใน **Qdrant Vector DB** โดยใช้ดัชนี HNSW และระยะห่างแบบ Cosine พร้อมให้บริการ REST API ที่รวดเร็วสำหรับการค้นหาใบหน้าแบบย้อนกลับ
 
 ---
 
@@ -32,7 +32,7 @@ docker compose up -d --build
 
 ### 2. การเร่งความเร็วด้วยฮาร์ดแวร์และการตั้งค่าข้ามแพลตฟอร์ม
 
-ReconFace รองรับการเร่งความเร็วด้วยฮาร์ดแวร์โดยอัตโนมัติในหลายแพลตฟอร์ม:
+Face รองรับการเร่งความเร็วด้วยฮาร์ดแวร์โดยอัตโนมัติในหลายแพลตฟอร์ม:
 
 - **Windows / Linux (NVIDIA GPU):** ใช้ CUDA (`CUDAExecutionProvider`) หรือ DirectML (`DmlExecutionProvider`)
 - **macOS (Apple Silicon M1/M2/M3/M4):** ใช้ Apple Neural Engine / GPU (`CoreMLExecutionProvider`) หรือ CPU ประสิทธิภาพสูงบนสถาปัตยกรรม ARM64
@@ -50,7 +50,7 @@ docker compose up -d qdrant redis minio
 xcode-select --install
 brew install cmake
 
-# 3. สร้าง virtual environment และติดตั้ง ReconFace
+# 3. สร้าง virtual environment และติดตั้ง Face
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -e ".[dev]"
