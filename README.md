@@ -1,101 +1,107 @@
-# 🎯 ReconFace: Production-Ready Reverse Face Recognition & Search
+# 🎯 ReconFace: ระบบค้นหาใบหน้าแบบย้อนกลับและระบบรู้จำใบหน้า
 
-An end-to-end, distributed OSINT system designed to ingest images from web sources, extract 512-dimensional normalized face embeddings using **InsightFace ArcFace**, index vectors into **Qdrant Vector DB** using HNSW index and Cosine distance, and provide a fast REST API for reverse face searching.
+ReconFace คือระบบ OSINT แบบครบวงจรและกระจายการทำงาน สำหรับรับรูปภาพจากแหล่งข้อมูลบนเว็บ สกัดเวกเตอร์ใบหน้าขนาด 512 มิติที่ผ่านการทำให้เป็นมาตรฐานด้วย **InsightFace ArcFace** จัดทำดัชนีเวกเตอร์ลงใน **Qdrant Vector DB** โดยใช้ดัชนี HNSW และระยะห่างแบบ Cosine พร้อมให้บริการ REST API ที่รวดเร็วสำหรับการค้นหาใบหน้าแบบย้อนกลับ
 
 ---
 
-## 🏗️ Architecture
+## 🏗️ สถาปัตยกรรมระบบ
 
 ```mermaid
 flowchart LR
-    A[Client / OSINT Analyst] -->|Upload Image| B[FastAPI REST API]
-    A -->|Submit URLs| B
-    B -->|Async Ingest Tasks| C[Redis Queue]
+    A[ผู้ใช้ / นักวิเคราะห์ OSINT] -->|อัปโหลดรูปภาพ| B[FastAPI REST API]
+    A -->|ส่ง URL| B
+    B -->|งานนำเข้าแบบอะซิงโครนัส| C[Redis Queue]
     C --> D[Celery Workers]
-    D -->|Download & Extract Faces| E[InsightFace ArcFace]
-    D -->|Store Original & Crops| F[MinIO S3 Storage]
-    D -->|Index 512-d Vectors| G[Qdrant Vector DB]
-    B -->|Query 512-d Vector| G
-    G -->|Top-K Matches & Metadata| B
+    D -->|ดาวน์โหลดและสกัดใบหน้า| E[InsightFace ArcFace]
+    D -->|จัดเก็บไฟล์ต้นฉบับและภาพใบหน้า| F[MinIO S3 Storage]
+    D -->|จัดทำดัชนีเวกเตอร์ 512 มิติ| G[Qdrant Vector DB]
+    B -->|ค้นหาเวกเตอร์ 512 มิติ| G
+    G -->|ผลลัพธ์ Top-K และข้อมูลกำกับ| B
 ```
 
----
+## ⚡ เริ่มต้นใช้งานอย่างรวดเร็ว
 
-## ⚡ Quickstart
+### 1. รันด้วย Docker Compose
 
-### 1. Run via Docker Compose
 ```bash
 docker compose up -d --build
 ```
-Interactive Swagger API documentation: [http://localhost:8000/docs](http://localhost:8000/docs)  
-Web Search & AI Recon UI: [http://localhost:8000/ui](http://localhost:8000/ui)
 
-### 2. Hardware Acceleration & Cross-Platform Setup
+- เอกสาร API แบบโต้ตอบด้วย Swagger: http://localhost:8000/docs
+- หน้าจอค้นหาเว็บและระบบ AI Recon: http://localhost:8000/ui
 
-ReconFace supports automatic hardware acceleration across platforms:
-- **Windows / Linux (NVIDIA GPU)**: Uses CUDA (`CUDAExecutionProvider`) or DirectML (`DmlExecutionProvider`).
-- **macOS (Apple Silicon M1/M2/M3/M4)**: Uses Apple Neural Engine / GPU (`CoreMLExecutionProvider`) or ARM64 high-performance CPU.
+### 2. การเร่งความเร็วด้วยฮาร์ดแวร์และการตั้งค่าข้ามแพลตฟอร์ม
 
-#### 🍏 macOS Setup (Recommended Hybrid Setup)
-Docker Desktop on macOS cannot pass Apple GPU/Metal directly into Linux containers. For maximum performance on Mac, run databases in Docker and the AI engine natively:
+ReconFace รองรับการเร่งความเร็วด้วยฮาร์ดแวร์โดยอัตโนมัติในหลายแพลตฟอร์ม:
+
+- **Windows / Linux (NVIDIA GPU):** ใช้ CUDA (`CUDAExecutionProvider`) หรือ DirectML (`DmlExecutionProvider`)
+- **macOS (Apple Silicon M1/M2/M3/M4):** ใช้ Apple Neural Engine / GPU (`CoreMLExecutionProvider`) หรือ CPU ประสิทธิภาพสูงบนสถาปัตยกรรม ARM64
+
+### 🍏 การตั้งค่า macOS (รูปแบบ Hybrid ที่แนะนำ)
+
+Docker Desktop บน macOS ไม่สามารถส่งต่อ Apple GPU/Metal เข้าไปยัง Linux containers ได้โดยตรง เพื่อประสิทธิภาพสูงสุด ให้รันฐานข้อมูลด้วย Docker และรัน AI engine บนเครื่องโดยตรง:
 
 ```bash
-# 1. Start Qdrant, Redis, and MinIO in Docker
+# 1. เริ่มต้น Qdrant, Redis และ MinIO ด้วย Docker
 docker compose up -d qdrant redis minio
 
-# 2. Install Xcode command line tools & cmake (required for InsightFace build)
+# 2. ติดตั้ง Xcode command line tools และ cmake
+#    (จำเป็นสำหรับการ build InsightFace)
 xcode-select --install
 brew install cmake
 
-# 3. Create virtual environment & install ReconFace
+# 3. สร้าง virtual environment และติดตั้ง ReconFace
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -e ".[dev]"
 
-# 4. Start API Server
+# 4. เริ่มต้น API Server
 uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 ```
 
-#### 🪟 Windows / Linux with NVIDIA GPU
+### 🪟 Windows / Linux ที่ใช้ NVIDIA GPU
+
 ```bash
 pip install -e ".[dev,gpu]"
 uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 ```
 
----
+## 📡 จุดเชื่อมต่อ API
 
-## 📡 API Endpoints
+### 1. การค้นหาใบหน้าแบบย้อนกลับ
 
-### 1. Reverse Face Search
-- **Endpoint**: `POST /api/v1/search`
-- **Content-Type**: `multipart/form-data`
-- **Params**:
-  - `file`: Image file (JPG/PNG/WEBP)
-  - `face_index`: Target face index (default: `0` = largest face)
-  - `top_k`: Number of matches (default: `10`)
-  - `score_threshold`: Cosine similarity cutoff (default: `0.6`)
+- **Endpoint:** `POST /api/v1/search`
+- **Content-Type:** `multipart/form-data`
+- **พารามิเตอร์:**
+  - `file`: ไฟล์รูปภาพประเภท JPG, PNG หรือ WEBP
+  - `face_index`: ดัชนีใบหน้าที่ต้องการค้นหา (ค่าเริ่มต้น: `0` = ใบหน้าที่มีขนาดใหญ่ที่สุด)
+  - `top_k`: จำนวนผลลัพธ์ที่ต้องการ (ค่าเริ่มต้น: `10`)
+  - `score_threshold`: ค่าขีดจำกัดความคล้ายคลึงแบบ Cosine (ค่าเริ่มต้น: `0.6`)
 
-### 2. URL Ingestion
-- **Endpoint**: `POST /api/v1/ingest`
-- **Body**:
-  ```json
-  {
-    "url": "https://target-source.org/photo.jpg",
-    "metadata": {
-      "case_id": "OSINT-2026-001",
-      "source": "web_archive"
-    }
+### 2. การนำเข้ารูปภาพจาก URL
+
+- **Endpoint:** `POST /api/v1/ingest`
+- **Body:**
+
+```json
+{
+  "url": "https://target-source.org/photo.jpg",
+  "metadata": {
+    "case_id": "OSINT-2026-001",
+    "source": "web_archive"
   }
-  ```
+}
+```
 
-### 3. Health Check
-- **Endpoint**: `GET /api/v1/health`
-- Returns status of API, Qdrant Vector DB collection, and Storage backend.
+### 3. การตรวจสอบสถานะระบบ
 
----
+- **Endpoint:** `GET /api/v1/health`
+- ส่งกลับสถานะของ API, collection ใน Qdrant Vector DB และระบบจัดเก็บข้อมูล
 
-## 🧪 Testing
+## 🧪 การทดสอบ
+
 ```bash
 pytest tests/ -v
 ```
-All unit and integration tests run with an in-memory instance of Qdrant and synthetic test image fixtures.
+
+การทดสอบทั้ง unit tests และ integration tests จะทำงานด้วย Qdrant แบบ in-memory และชุดรูปภาพทดสอบที่สร้างขึ้นสำหรับการทดสอบโดยเฉพาะ
